@@ -42,7 +42,7 @@ THE SOFTWARE.
 #include <ctype.h>
 #include <stdlib.h>
 
-static const char ESC=27;
+static const char ESCC=27;
 static const char OPN=28;
 static const char CLS=29;
 
@@ -101,7 +101,7 @@ void Tokenizer_delete(Tokenizer* tok) {
 	free(tok);
 }
 
-//void Tokenizer_print(Tokenizer* tok) { printf("  @%u %s\n", tok->i, !tok->m_token ? "(null)" : (tok->m_token[0]==ESC)?"(esc)" : (tok->m_token[0]==OPN)?"(open)": (tok->m_token[0]==CLS)?"(close)" : tok->m_token); fflush(stdout); }
+//void Tokenizer_print(Tokenizer* tok) { printf("  @%u %s\n", tok->i, !tok->m_token ? "(null)" : (tok->m_token[0]==ESCC)?"(esc)" : (tok->m_token[0]==OPN)?"(open)": (tok->m_token[0]==CLS)?"(close)" : tok->m_token); fflush(stdout); }
 
 static const char* Tokenizer_set(Tokenizer* tok, const char* s, size_t size) {
 	if(!size||!s) return 0;
@@ -124,7 +124,7 @@ static void Tokenizer_append(Tokenizer* tok, char ch) {
 }
 
 const char* Tokenizer_next(Tokenizer* tok) {
-	const char* ESC_str = "\033";
+	const char* ESCC_str = "\033";
 	const char* OPEN_str = "\034";
 	const char* CLOSE_str = "\035";
 
@@ -171,7 +171,7 @@ const char* Tokenizer_next(Tokenizer* tok) {
 			    tok->i=find(tok->s, ">", tok->i+2);
 			else if(!quotMode&&!tok->tagMode) {
 				if((tok->i+1<tok->s_size)&&(tok->s[tok->i+1]=='/')) {
-					tok->m_next=ESC_str;
+					tok->m_next=ESCC_str;
 					tok->m_next_size = 1;
 					tok->i=find(tok->s, ">", tok->i+2);
 				}
@@ -189,7 +189,7 @@ const char* Tokenizer_next(Tokenizer* tok) {
 				tokenComplete = 1;
 				if((tok->i+1 < tok->s_size) && (tok->s[tok->i+1]=='>')) {
 					tok->tagMode=0;
-					tok->m_next=ESC_str;
+					tok->m_next=ESCC_str;
 					tok->m_next_size = 1;
 					++tok->i;
 				}
@@ -314,7 +314,7 @@ int Xml_eval(lua_State *L) {
 		lua_pushstring(L, Tokenizer_next(tok));
 		lua_settable(L, -3);
 		
-		while(((token = Tokenizer_next(tok))!=0)&&(token[0]!=CLS)&&(token[0]!=ESC)) { // parse tag header
+		while(((token = Tokenizer_next(tok))!=0)&&(token[0]!=CLS)&&(token[0]!=ESCC)) { // parse tag header
 			size_t sepPos=find(token, "=", 0);
 			if(token[sepPos]) { // regular attribute
 				const char* aVal =token+sepPos+2;
@@ -323,12 +323,12 @@ int Xml_eval(lua_State *L) {
 				lua_settable(L, -3);
 			}
 		}            
-		if(!token||(token[0]==ESC)) {
+		if(!token||(token[0]==ESCC)) {
 			if(lua_gettop(L)>1) lua_settop(L,-2); // this tag has no content, only attributes
 			else break;
 		}
 	}
-	else if(token[0]==ESC) { // previous tag is over
+	else if(token[0]==ESCC) { // previous tag is over
 		if(lua_gettop(L)>1) lua_settop(L,-2); // pop current table
 		else break;
 	}
